@@ -1,0 +1,11 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - command: hostname
+
+
+- hosts: all
+  become: true
+  tasks:
+    - file: path=/home/test state=touch
