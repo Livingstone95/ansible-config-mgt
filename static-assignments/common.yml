@@ -1,0 +1,16 @@
+---
+
+- name: appying changes
+  hosts: all
+  become: true
+  
+  tasks:
+  - name: print the hostname
+    command: hostname
+
+  - name: print a tetst file
+    file:
+      path: /home/test 
+      state: touch
+
+      

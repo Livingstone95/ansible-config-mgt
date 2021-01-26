@@ -1,0 +1,106 @@
+- name: install httpd on the webserver
+  ansible.builtin.yum:
+      name: "httpd"
+      state: present
+
+
+- name: ensure httpd is started and enabled
+  ansible.builtin.service:
+     name: httpd 
+     state: started 
+     enabled: yes
+
+- name: install git
+  ansible.builtin.yum: 
+     name: "git"
+     state: latest
+
+
+- name: Clone the repository
+  git:
+   repo: https://github.com/Livingstone95/tooling.git
+   clone: yes
+   dest: /home/ansadmin/tooling
+
+- name: copy the html from tooling
+  ansible.builtin.file:
+     src: /home/ansadmin/tooling/html/ 
+     dest: /var/www/html/
+  
+
+
+- name: create site available
+  ansible.builtin.file:
+    path: /etc/httpd/sites-available/ 
+    state: directory
+
+- name: create site enabled
+  ansible.builtin.file:
+    path: /etc/httpd/sites-enabled/ 
+    state: directory
+
+- name: create ansadmin file in site enabled
+  ansible.builtin.file:
+    path: /etc/httpd/sites-enabled/ansadmin
+    state: touch
+    owner: "ansadmin"
+    mode: '0755'
+
+
+- name: Allow apache to modify /etc/httpd/sites-enabled/ansadmin 
+  community.general.sefcontext:
+    target: /etc/httpd/sites-enabled/ansadmin
+    ignore_selinux_state: yes
+    setype: httpd_sys_content_t
+
+
+- name: set up apache virtual host
+  template:
+    src: "templates/httpd.conf.j2"
+    dest: "/etc/httpd/sites-available/ansadmin"
+   
+  
+- name: to ensure httpd have access to /var/www/html
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    owner: "ansadmin"
+    mode: '0755'
+
+
+- name: de-activate default httpd site
+  ansible.builtin.file:
+    path: /etc/httpd/conf.d/welcome.conf 
+    state: absent
+
+
+
+- name: activate tooling site
+  ansible.builtin.file:
+    src: /etc/httpd/sites-available/ansadmin
+    dest: /etc/httpd/sites-enabled/ansadmin
+    force: yes
+    state: link
+   
+- name: intall firewalld
+  ansible.builtin.yum:
+     name: firewalld
+     state: latest
+
+- name: ensure httpd is firewalld and enabled
+  ansible.builtin.service:
+     name: firewalld
+     state: started 
+     enabled: yes
+
+- name: permit traffic in default zone for https service
+  ansible.posix.firewalld:
+    service: https
+    permanent: yes
+    state: enabled   
+
+
+   
+    
+
+  
