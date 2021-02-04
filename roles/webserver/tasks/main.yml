@@ -10,25 +10,40 @@
      state: started 
      enabled: yes
 
-- name: install git
-  ansible.builtin.yum: 
-     name: "git"
-     state: latest
+- name: remove default html folder
+  ansible.builtin.file:
+    path: /var/www/html
+    state: absent
 
 
 - name: Clone the repository
-  git:
+  ansible.builtin.git:
    repo: https://github.com/Livingstone95/tooling.git
    clone: yes
    dest: /home/ansadmin/tooling
+    
 
 - name: copy the html from tooling
-  ansible.builtin.file:
-     src: /home/ansadmin/tooling/html/ 
-     dest: /var/www/html/
+  ansible.builtin.copy:
+    src: /home/ansadmin/tooling/html/
+    dest: /var/www/
+    owner: "ansadmin"
+    mode: '0755'
+    remote_src: yes
   
+- name: to ensure httpd have access to /var/www/html
+  ansible.builtin.file:
+    path: /var/www/html
+    state: directory
+    owner: "ansadmin"
+    mode: '0755'
 
-
+- name: Replace functions.php file
+  ansible.builtin.copy:
+    src: templates/functions.php.j2
+    dest: /var/www/html/functions.php
+    follow: yes
+     
 - name: create site available
   ansible.builtin.file:
     path: /etc/httpd/sites-available/ 
@@ -46,6 +61,7 @@
     owner: "ansadmin"
     mode: '0755'
 
+#useful when the remote host is RHEL/Centos
 
 - name: Allow apache to modify /etc/httpd/sites-enabled/ansadmin 
   community.general.sefcontext:
@@ -53,19 +69,10 @@
     ignore_selinux_state: yes
     setype: httpd_sys_content_t
 
-
 - name: set up apache virtual host
-  template:
+  ansible.builtin.template:
     src: "templates/httpd.conf.j2"
     dest: "/etc/httpd/sites-available/ansadmin"
-   
-  
-- name: to ensure httpd have access to /var/www/html
-  ansible.builtin.file:
-    path: /var/www/html
-    state: directory
-    owner: "ansadmin"
-    mode: '0755'
 
 
 - name: de-activate default httpd site
@@ -82,12 +89,12 @@
     force: yes
     state: link
    
-- name: intall firewalld
+- name: install firewalld
   ansible.builtin.yum:
      name: firewalld
      state: latest
 
-- name: ensure httpd is firewalld and enabled
+- name: ensure httpd firewalld is enabled
   ansible.builtin.service:
      name: firewalld
      state: started 
