@@ -1,0 +1,9 @@
+# to enble loadbalancer
+load_balancer_is_required: true
+
+# if you want to use apache loadbalcer, set this to true
+enable_apache_lb: true
+
+
+# if you want to use nginx loadbalcer, set this to true
+enable_nginx_lb: false

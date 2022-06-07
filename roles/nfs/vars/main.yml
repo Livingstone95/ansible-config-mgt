@@ -1,0 +1,9 @@
+---
+# vars file for nfs
+vg_name : vg1
+lv1_name : lv-opt
+lv2_name : lv-apps
+lv3_name : lv-logs
+fs: xfs
+lv_size : 5
+
