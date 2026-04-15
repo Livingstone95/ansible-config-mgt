@@ -1,0 +1,9 @@
+---
+- name: play for ssl certificate setup using letsencrypt
+  become: true
+  hosts: loadbalancer
+  vars:
+    certbot_auto_renew_user: ubuntu
+  
+  roles:
+    - certbot
